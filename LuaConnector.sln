@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.757
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuaConnector", "LuaConnector\LuaConnector.csproj", "{697DF38E-E18A-4A54-8D86-A0978891F05F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{697DF38E-E18A-4A54-8D86-A0978891F05F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{697DF38E-E18A-4A54-8D86-A0978891F05F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{697DF38E-E18A-4A54-8D86-A0978891F05F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{697DF38E-E18A-4A54-8D86-A0978891F05F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D44DD9B-E891-4568-9844-848F37F8A564}
+	EndGlobalSection
+EndGlobal
