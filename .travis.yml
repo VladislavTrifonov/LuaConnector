@@ -1,4 +1,0 @@
-language: csharp
-solution: LuaConnector.sln
-mono:
-  - latest
