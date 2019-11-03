@@ -11,6 +11,7 @@ pool:
 
 steps:
 - task: DotNetCoreCLI@2
+  displayName: Restore
   inputs:
     command: restore
     projects: '**/*.csproj'
@@ -21,3 +22,9 @@ steps:
     command: build
     projects: '**/*.csproj'
     arguments: '--configuration Release' # Update this to match your need
+    
+- task: PowerShell@2
+  displayName: 'Download Lua Binaries'
+  inputs:
+    targetType: filePath
+    filePath: downloadLua.ps1
