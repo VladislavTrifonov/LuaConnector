@@ -10,15 +10,7 @@ namespace tests
         [TestMethod]
         public void ProcessFile()
         {
-            var lua = new LuaState();
-            try
-            {
-                lua.ProcessFile("test.lua");
-            }
-            catch (LuaException ex)
-            {
-                Assert.Fail(ex.Message);
-            }
+            
         }
     }
 }
