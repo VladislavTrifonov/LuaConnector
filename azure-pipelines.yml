@@ -23,8 +23,11 @@ steps:
     projects: '**/*.csproj'
     arguments: '--configuration Release' # Update this to match your need
     
-- task: PowerShell@2
-  displayName: 'Download Lua Binaries'
+- task: VSTest@2
+  displayName: Testing
   inputs:
-    targetType: filePath
-    filePath: downloadLua.ps1
+    testSelector: testAssemblies
+    testAssemblyVer2: tests.dll
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    
+    
