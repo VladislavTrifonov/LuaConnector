@@ -15,12 +15,11 @@ namespace LuaConnector
 
         public LuaStatus Status { get; private set; } = LuaStatus.ReadyToRun;
 
+        private const int LUA_MULTIRET = -1;
+
         private bool disposed = false;
-        private readonly IntPtr lua_State;
-
-        private List<string> files = new List<string>();
-
-        
+     
+        private readonly IntPtr lua_State;     
 
         public LuaState(bool loadLibs = true)
         {
@@ -43,29 +42,43 @@ namespace LuaConnector
                 ProcessFilesInDir(subDir);
         }
 
-        public (int, bool) ProcessFile(string fileName)
+        public void ProcessFile(string fileName)
         {
-            var ret = CApi.luaL_loadfilex(lua_State, fileName, null);
-            //var ret_2 = CApi.lua_pcallk(lua_State, 0, -1, 0, IntPtr.Zero, IntPtr.Zero);
-            /*  if (ret == LuaError.Memory)
-              {
-                  Status = LuaStatus.Broken;
-                  throw new LuaOutOfMemoryException($"Memory is out while processing file {fileName}");
-              }
-              else if (ret == LuaError.Syntax)
-              {
-                  var cmessage = CApi.luaL_tolstring(lua_State, -1, out UIntPtr size);
-                  var message = Marshal.PtrToStringAnsi(cmessage, (int)size);
-                  throw new LuaSyntaxException(message);
-              }
-              else
-              {*/
-            var cmessage = CApi.luaL_tolstring(lua_State, -1, out UIntPtr size);
-            var message = Marshal.PtrToStringAnsi(cmessage, (int)size);
-            throw new LuaSyntaxException(message);
-            
-            //}
-                
+            LuaError ret;
+            ret = (LuaError)CApi.luaL_loadfilex(lua_State, fileName, null);
+            if (ret != LuaError.OK)
+                ErrorCodeToException(ret);
+
+            ret = (LuaError)CApi.lua_pcallk(lua_State, 0, LUA_MULTIRET, 0, IntPtr.Zero, IntPtr.Zero);
+            if (ret != LuaError.OK)
+                ErrorCodeToException(ret);
+
+        }
+
+        private void ErrorCodeToException(LuaError returnCode)
+        {
+            switch (returnCode)
+            {
+                case LuaError.FileNotFound:
+                    throw new LuaProcessFileException("File not found");
+
+                case LuaError.GCMetaMethod:
+                case LuaError.Runtime:
+                case LuaError.Unknown:
+                    throw new LuaException($"Something went wrong, LuaError returns {returnCode}");
+
+                case LuaError.Memory:
+                    throw new LuaOutOfMemoryException("Memory is over");
+
+                case LuaError.Syntax:
+                    throw new LuaSyntaxException(GetString(-1));
+            }
+        }
+
+        private string GetString(int index)
+        {
+            var c_message = CApi.luaL_tolstring(lua_State, index, out UIntPtr size); // gets C-string from Lua-stack
+            return Marshal.PtrToStringAnsi(c_message, (int)size);
         }
 
         ~LuaState()

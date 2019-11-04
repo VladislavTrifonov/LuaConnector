@@ -6,9 +6,12 @@ namespace LuaConnector.Enums
 {
     public enum LuaError
     {
-        OK, 
+        OK = 0x0, 
+        Runtime = 0x2,
         Syntax,
         Memory,
-        GCMetaMethod
+        GCMetaMethod,
+        Unknown,
+        FileNotFound
     }
 }
