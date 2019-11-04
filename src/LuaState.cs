@@ -60,7 +60,7 @@ namespace LuaConnector
             switch (returnCode)
             {
                 case LuaError.FileNotFound:
-                    throw new LuaProcessFileException("File not found");
+                    throw new LuaProcessFileException(GetString(-1));
 
                 case LuaError.GCMetaMethod:
                 case LuaError.Runtime:
