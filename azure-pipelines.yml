@@ -27,7 +27,7 @@ steps:
   displayName: Testing
   inputs:
     testSelector: testAssemblies
-    testAssemblyVer2: *tests.dll
+    testAssemblyVer2: */tests.dll
     searchFolder: '$(System.DefaultWorkingDirectory)'
     
     
