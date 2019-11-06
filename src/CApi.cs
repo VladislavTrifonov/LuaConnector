@@ -335,7 +335,7 @@ namespace LuaConnector
         internal static extern voidptr_t luaL_checkudata(lua_State luaState, int arg, string tName);
 
         [DllImport(LuaLibraryName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern void luaL_checkversion_(lua_State luaState, lua_Number ver, size_t sz);
+        internal static extern void luaL_checkversion_(lua_State luaState, lua_Number ver, size_t sz);
 
         [DllImport(LuaLibraryName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         internal static extern int luaL_error(lua_State luaState, string message);

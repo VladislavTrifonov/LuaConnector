@@ -11,7 +11,6 @@ namespace LuaConnector
 {
     public class LuaState : IDisposable
     {
-        public IntPtr Handle => lua_State;
 
         public LuaStatus Status { get; private set; } = LuaStatus.ReadyToRun;
 
@@ -53,6 +52,17 @@ namespace LuaConnector
             if (ret != LuaError.OK)
                 ErrorCodeToException(ret);
 
+        }
+
+        public void ProcessString(string str)
+        {
+            CApi.luaL_loadbufferx(lua_State, Encoding.UTF8.GetBytes(str), (UIntPtr)str.Length, "ProcessStringChunk", null);
+
+            LuaError ret;
+            ret = (LuaError)CApi.lua_pcallk(lua_State, 0, LUA_MULTIRET, 0, IntPtr.Zero, IntPtr.Zero);
+            if (ret != LuaError.OK)
+                ErrorCodeToException(ret);
+            
         }
 
         private void ErrorCodeToException(LuaError returnCode)
