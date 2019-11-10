@@ -79,29 +79,30 @@ namespace LuaConnector
 
         private void PushCLRObj(object obj)
         {
-            if (obj is bool)
+            switch (obj)
             {
-                CApi.lua_pushboolean(lua_State, Convert.ToInt32((bool)obj));
+
+                case bool b:
+                    CApi.lua_pushboolean(lua_State, Convert.ToInt32(b));
+                    break;
+                case double d:
+                    CApi.lua_pushnumber(lua_State, d);
+                    break;
+                case long l:
+                    CApi.lua_pushinteger(lua_State, l);
+                    break;
+                case string str:
+                    {
+                        byte[] s = Encoding.ASCII.GetBytes(str);
+                        CApi.lua_pushlstring(lua_State, s, (UIntPtr)str.Length);
+                        break;
+                    }
+                case null:
+                    CApi.lua_pushnil(lua_State);
+                    break;
+                default:
+                    throw new LuaException("Unsupported type for push object!");
             }
-            else if (obj is double)
-            {
-                CApi.lua_pushnumber(lua_State, (double)obj);
-            }
-            else if (obj is long)
-            {
-                CApi.lua_pushinteger(lua_State, (long)obj);
-            }
-            else if (obj is string)
-            {
-                byte[] s = Encoding.ASCII.GetBytes((string)obj);
-                CApi.lua_pushlstring(lua_State, s, (UIntPtr)((string)obj).Length);
-            }
-            else if (obj is null)
-            {
-                CApi.lua_pushnil(lua_State);
-            }
-            else
-                throw new LuaException("Unsupported type for push object!");
         }
 
         private object LuaObjToCLRObj(int index)
