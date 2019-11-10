@@ -127,14 +127,7 @@ namespace LuaConnector
                     }
                 case LuaTypes.Table:
                     {
-                        var table = new LuaTable();
-                        CApi.lua_pushnil(lua_State);
-                        while (CApi.lua_next(lua_State, index) != 0)
-                        {
-                            table.Add(LuaObjToCLRObj(-2), LuaObjToCLRObj(-1));
-                            CApi.lua_settop(lua_State, -2);
-                        }
-                        return table;
+                        return ConvertToTable(index);
                     }
                 default:
                     throw new LuaException($"Unsupported type of index {index} ({Marshal.PtrToStringAnsi(CApi.lua_typename(lua_State, CApi.lua_type(lua_State, index)))})");
@@ -195,6 +188,27 @@ namespace LuaConnector
             if (isNum == 0)
                 throw new LuaInvalidCastException($"Failed to convert index {index} to double. Index contains {ConvertToString(index)}");
             return convertedValue;
+        }
+
+        private LuaTable ConvertToTable(int index)
+        {
+            var table = new LuaTable();
+            var tempIndex = index < 0 ? index - 1 : index;
+            CApi.lua_pushnil(lua_State);
+
+            while (CApi.lua_next(lua_State, tempIndex) != 0)
+            {
+                try
+                {
+                    table.Add(LuaObjToCLRObj(-2), LuaObjToCLRObj(-1));
+                }
+                catch (LuaInvalidArgumentException)
+                { }
+                
+                CApi.lua_settop(lua_State, -2);
+            }
+           
+            return table;
         }
 
         ~LuaState()
