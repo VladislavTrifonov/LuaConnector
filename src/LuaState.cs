@@ -104,7 +104,7 @@ namespace LuaConnector
                     throw new LuaException("Unsupported type for push object!");
             }
         }
-
+        
         private object LuaObjToCLRObj(int index)
         {
             switch ((LuaTypes)CApi.lua_type(lua_State, index))
@@ -124,6 +124,17 @@ namespace LuaConnector
                             return ConvertToDouble(index);
                         else
                             return ConvertToInt(index);
+                    }
+                case LuaTypes.Table:
+                    {
+                        var table = new LuaTable();
+                        CApi.lua_pushnil(lua_State);
+                        while (CApi.lua_next(lua_State, index) != 0)
+                        {
+                            table.Add(LuaObjToCLRObj(-2), LuaObjToCLRObj(-1));
+                            CApi.lua_settop(lua_State, -2);
+                        }
+                        return table;
                     }
                 default:
                     throw new LuaException($"Unsupported type of index {index} ({Marshal.PtrToStringAnsi(CApi.lua_typename(lua_State, CApi.lua_type(lua_State, index)))})");
