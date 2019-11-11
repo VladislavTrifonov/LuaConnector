@@ -185,6 +185,12 @@ namespace LuaConnector
                 throw new LuaInvalidCastException($"Failed to convert index {index} to double. Index contains {ConvertToString(index)}");
             return convertedValue;
         }
+        private bool IsString(int index) => CApi.lua_type(lua_State, index) == (int)LuaTypes.String;
+        private bool IsBoolean(int index) => CApi.lua_type(lua_State, index) == (int)LuaTypes.Boolean;
+        private bool IsNil(int index) => CApi.lua_type(lua_State, index) == (int)LuaTypes.Nil;
+        private bool IsTable(int index) => CApi.lua_type(lua_State, index) == (int)LuaTypes.Table;
+        private bool IsNumber(int index) => CApi.lua_isnumber(lua_State, index) == 1;
+        private bool IsInteger(int index) => CApi.lua_isinteger(lua_State, index) == 1;
 
         ~LuaState()
         {
