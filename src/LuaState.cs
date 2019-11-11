@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using LuaConnector.Exceptions;
 using LuaConnector.Enums;
+using System.Diagnostics;
 
 namespace LuaConnector
 {
@@ -21,7 +22,7 @@ namespace LuaConnector
             }
             set
             {
-                PushCLRObj(value);
+                PushCLRObj(value, name);
                 CApi.lua_setglobal(lua_State, name);
             }
         }
@@ -68,7 +69,7 @@ namespace LuaConnector
 
         public void ProcessString(string str)
         {
-            CApi.luaL_loadbufferx(lua_State, Encoding.UTF8.GetBytes(str), (UIntPtr)str.Length, "ProcessStringChunk", null);
+            CApi.luaL_loadbufferx(lua_State, Encoding.ASCII.GetBytes(str), (UIntPtr)str.Length, "ProcessStringChunk", null);
 
             LuaError ret;
             ret = (LuaError)CApi.lua_pcallk(lua_State, 0, LUA_MULTIRET, 0, IntPtr.Zero, IntPtr.Zero);
@@ -77,16 +78,18 @@ namespace LuaConnector
             
         }
 
-        private void PushCLRObj(object obj)
+        private void PushCLRObj(object obj, string name = "")
         {
             switch (obj)
             {
-
                 case bool b:
                     CApi.lua_pushboolean(lua_State, Convert.ToInt32(b));
                     break;
                 case double d:
                     CApi.lua_pushnumber(lua_State, d);
+                    break;
+                case int i:
+                    CApi.lua_pushinteger(lua_State, i);
                     break;
                 case long l:
                     CApi.lua_pushinteger(lua_State, l);
@@ -97,6 +100,29 @@ namespace LuaConnector
                         CApi.lua_pushlstring(lua_State, s, (UIntPtr)str.Length);
                         break;
                     }
+                case LuaTable tbl:
+                    {
+                        foreach (var kv in tbl)
+                        {
+                            if (CApi.lua_type(lua_State, -1) != (int)LuaTypes.Table)
+                            {
+                                CApi.lua_getglobal(lua_State, name);
+
+                                if (CApi.lua_type(lua_State, -1) != (int)LuaTypes.Table)
+                                {
+                                    CApi.lua_settop(lua_State, -2);
+                                    CApi.lua_createtable(lua_State, 0, 0);
+                                    
+                                }
+                            }
+                            PushCLRObj(kv.Key);
+                            PushCLRObj(kv.Value);
+                            
+                            CApi.lua_settable(lua_State, -3);
+                           
+                        }
+                        break;
+                    }
                 case null:
                     CApi.lua_pushnil(lua_State);
                     break;
@@ -104,7 +130,7 @@ namespace LuaConnector
                     throw new LuaException("Unsupported type for push object!");
             }
         }
-
+        
         private object LuaObjToCLRObj(int index)
         {
             switch ((LuaTypes)CApi.lua_type(lua_State, index))
@@ -124,6 +150,10 @@ namespace LuaConnector
                             return ConvertToDouble(index);
                         else
                             return ConvertToInt(index);
+                    }
+                case LuaTypes.Table:
+                    {
+                        return ConvertToTable(index);
                     }
                 default:
                     throw new LuaException($"Unsupported type of index {index} ({Marshal.PtrToStringAnsi(CApi.lua_typename(lua_State, CApi.lua_type(lua_State, index)))})");
@@ -150,9 +180,18 @@ namespace LuaConnector
             }
         }
 
-        private string ConvertToString(int index)
+        private string ConvertToString(int index, bool callMM = false)
         {
-            var c_message = CApi.luaL_tolstring(lua_State, index, out UIntPtr size); // gets C-string from Lua-stack
+            IntPtr c_message;
+            UIntPtr size;
+            if (callMM)
+            {
+                c_message = CApi.luaL_tolstring(lua_State, index, out size); // gets C-string from Lua-stack
+                CApi.lua_settop(lua_State, -2);
+            }
+            else
+                c_message = CApi.lua_tolstring(lua_State, index, out size);
+
             return Marshal.PtrToStringAnsi(c_message, (int)size);
         }
 
@@ -191,6 +230,28 @@ namespace LuaConnector
         private bool IsTable(int index) => CApi.lua_type(lua_State, index) == (int)LuaTypes.Table;
         private bool IsNumber(int index) => CApi.lua_isnumber(lua_State, index) == 1;
         private bool IsInteger(int index) => CApi.lua_isinteger(lua_State, index) == 1;
+
+        private LuaTable ConvertToTable(int index)
+        {
+            var table = new LuaTable();
+            var tempIndex = index < 0 ? index - 1 : index;
+            CApi.lua_pushnil(lua_State);
+            
+            while (CApi.lua_next(lua_State, tempIndex) != 0)
+            {
+                try
+                {          
+                    table.Add(LuaObjToCLRObj(-2), LuaObjToCLRObj(-1));
+                }
+                catch (LuaInvalidArgumentException)
+                { }
+                
+                CApi.lua_settop(lua_State, -2);
+            }
+           
+            return table;
+        }
+
 
         ~LuaState()
         {
