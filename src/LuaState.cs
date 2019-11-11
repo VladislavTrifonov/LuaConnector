@@ -22,7 +22,7 @@ namespace LuaConnector
             }
             set
             {
-                PushCLRObj(value);
+                PushCLRObj(value, name);
                 CApi.lua_setglobal(lua_State, name);
             }
         }
@@ -78,16 +78,18 @@ namespace LuaConnector
             
         }
 
-        private void PushCLRObj(object obj)
+        private void PushCLRObj(object obj, string name = "")
         {
             switch (obj)
             {
-
                 case bool b:
                     CApi.lua_pushboolean(lua_State, Convert.ToInt32(b));
                     break;
                 case double d:
                     CApi.lua_pushnumber(lua_State, d);
+                    break;
+                case int i:
+                    CApi.lua_pushinteger(lua_State, i);
                     break;
                 case long l:
                     CApi.lua_pushinteger(lua_State, l);
@@ -96,6 +98,29 @@ namespace LuaConnector
                     {
                         byte[] s = Encoding.ASCII.GetBytes(str);
                         CApi.lua_pushlstring(lua_State, s, (UIntPtr)str.Length);
+                        break;
+                    }
+                case LuaTable tbl:
+                    {
+                        foreach (var kv in tbl)
+                        {
+                            if (CApi.lua_type(lua_State, -1) != (int)LuaTypes.Table)
+                            {
+                                CApi.lua_getglobal(lua_State, name);
+
+                                if (CApi.lua_type(lua_State, -1) != (int)LuaTypes.Table)
+                                {
+                                    CApi.lua_settop(lua_State, -2);
+                                    CApi.lua_createtable(lua_State, 0, 0);
+                                    
+                                }
+                            }
+                            PushCLRObj(kv.Key);
+                            PushCLRObj(kv.Value);
+                            
+                            CApi.lua_settable(lua_State, -3);
+                           
+                        }
                         break;
                     }
                 case null:

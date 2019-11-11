@@ -50,13 +50,13 @@ namespace LuaConnector
 
         private void ValidateKey(object key)
         {
-            if (!(key is bool || key is long || key is double || key is string))
+            if (!(key is bool || key is long || key is int || key is double || key is string))
                 throw new LuaInvalidArgumentException($"Key in LuaTable doesn't {key.ToString()} type");
         }
 
         private void ValidateValue(object value)
         {
-            if (!(value is bool || value is long || value is double || value is string || value is LuaTable))
+            if (!(value is bool || value is long || value is int || value is double || value is string || value is LuaTable))
                 throw new LuaInvalidArgumentException($"Value in LuaTable doesn't {value.ToString()} type");
 
         }
