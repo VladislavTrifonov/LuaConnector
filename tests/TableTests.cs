@@ -15,7 +15,7 @@ namespace tests
         {
             try 
             {
-                L.ProcessString("table = {[0] = 1, [1] = {[false] = true}}");
+                L.ProcessString("countries = {['Kt'] = {['Tk'] = 25}}");
             }
             catch (Exception)
             { 
@@ -26,12 +26,12 @@ namespace tests
         [TestMethod]
         public void ReadingTable()
         {
-            var table = L["table"] as LuaTable;
+            var table = L["countries"] as LuaTable;
             if (table == null)
                 Assert.Fail("Table is null");
-            Assert.AreEqual((long)table[0L], 1L);
-            var nestedTable = table[1L] as LuaTable;
-            Assert.AreEqual(nestedTable[false], true);
+            var nestedTable = table["Kt"] as LuaTable;
+            Assert.AreEqual(nestedTable["Tk"], 25L);
+            
         }
 
     }

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using LuaConnector.Exceptions;
 using LuaConnector.Enums;
+using System.Diagnostics;
 
 namespace LuaConnector
 {
@@ -68,7 +69,7 @@ namespace LuaConnector
 
         public void ProcessString(string str)
         {
-            CApi.luaL_loadbufferx(lua_State, Encoding.UTF8.GetBytes(str), (UIntPtr)str.Length, "ProcessStringChunk", null);
+            CApi.luaL_loadbufferx(lua_State, Encoding.ASCII.GetBytes(str), (UIntPtr)str.Length, "ProcessStringChunk", null);
 
             LuaError ret;
             ret = (LuaError)CApi.lua_pcallk(lua_State, 0, LUA_MULTIRET, 0, IntPtr.Zero, IntPtr.Zero);
@@ -154,9 +155,18 @@ namespace LuaConnector
             }
         }
 
-        private string ConvertToString(int index)
+        private string ConvertToString(int index, bool callMM = false)
         {
-            var c_message = CApi.luaL_tolstring(lua_State, index, out UIntPtr size); // gets C-string from Lua-stack
+            IntPtr c_message;
+            UIntPtr size;
+            if (callMM)
+            {
+                c_message = CApi.luaL_tolstring(lua_State, index, out size); // gets C-string from Lua-stack
+                CApi.lua_settop(lua_State, -2);
+            }
+            else
+                c_message = CApi.lua_tolstring(lua_State, index, out size);
+
             return Marshal.PtrToStringAnsi(c_message, (int)size);
         }
 
@@ -195,11 +205,11 @@ namespace LuaConnector
             var table = new LuaTable();
             var tempIndex = index < 0 ? index - 1 : index;
             CApi.lua_pushnil(lua_State);
-
+            
             while (CApi.lua_next(lua_State, tempIndex) != 0)
             {
                 try
-                {
+                {          
                     table.Add(LuaObjToCLRObj(-2), LuaObjToCLRObj(-1));
                 }
                 catch (LuaInvalidArgumentException)
@@ -210,6 +220,7 @@ namespace LuaConnector
            
             return table;
         }
+
 
         ~LuaState()
         {
