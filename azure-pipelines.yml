@@ -4,7 +4,8 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- 'master'
+- 'feature/*'
 
 pool:
   vmImage: 'windows-latest'
